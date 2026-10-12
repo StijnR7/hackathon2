@@ -54,6 +54,36 @@ public sealed class SimulationAndRetentionTests : IDisposable
         Assert.Contains(trip.Alerts, a => a.Type == TripAlertType.PriceAboveEstimate);
     }
 
+    [Fact] // UT-51 (regressietest: gevonden tijdens de acceptatietest)
+    public async Task Simulation_RouteSnappedToRoad_FinalPriceStillEqualsEstimate()
+    {
+        // Een echte routeplanner begint de route op de dichtstbijzijnde weg, niet exact op de ophaallocatie.
+        await using var db = _database.CreateContext();
+        var trips = _database.CreateTripService(db, new SnappingRouting());
+        var simulator = _database.CreateSimulator(db, trips);
+        var trip = await TripScenario.StartAmsterdamTripAsync(_database, trips);
+        await simulator.CreateAsync(trip, withDetour: false);
+
+        while (await simulator.StepAllAsync(TimeSpan.FromSeconds(1)) > 0)
+        {
+        }
+
+        var finished = await trips.GetTripDetailsAsync(trip.Id);
+        Assert.Equal(TripStatus.Completed, finished.Status);
+        Assert.InRange(finished.FinalPrice!.Value, trip.EstimatedPrice - 0.02m, trip.EstimatedPrice + 0.02m);
+    }
+
+    /// <summary>Routeplanner die begin- en eindpunt 40 m naar de "weg" verschuift, zoals OSRM doet.</summary>
+    private sealed class SnappingRouting : HitchTracker.Web.Services.Routing.IRoutingService
+    {
+        public async Task<HitchTracker.Web.Services.Routing.RouteResult> GetRouteAsync(
+            IReadOnlyList<GeoPoint> waypoints, CancellationToken cancellationToken = default)
+        {
+            var snapped = waypoints.Select(p => GeoMath.Offset(p, 40, 0)).ToList();
+            return await TestDatabase.OfflineRouting.GetRouteAsync(snapped, cancellationToken);
+        }
+    }
+
     [Fact] // UT-49
     public async Task DetourPoint_LiesBesideTheRoute()
     {
