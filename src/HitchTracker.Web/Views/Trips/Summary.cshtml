@@ -39,8 +39,8 @@
                     <caption class="caption-top">Opbouw volgens de meter &middot; tarief: @trip.TariffName</caption>
                     <tbody>
                     <tr><th scope="row" class="fw-normal">Instaptarief</th><td class="text-end">@Formatting.Money(breakdown.BaseFare, currency)</td></tr>
-                    <tr><th scope="row" class="fw-normal">Afstand (@Formatting.Kilometers(trip.DrivenDistanceMeters))</th><td class="text-end">@Formatting.Money(breakdown.DistanceCost, currency)</td></tr>
-                    <tr><th scope="row" class="fw-normal">Tijd (@Formatting.Minutes(trip.ElapsedSeconds))</th><td class="text-end">@Formatting.Money(breakdown.TimeCost, currency)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Afstand (@Formatting.PreciseKilometers(trip.DrivenDistanceMeters) &times; @Formatting.Money(trip.Rates.PricePerKm, currency))</th><td class="text-end">@Formatting.Money(breakdown.DistanceCost, currency)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Tijd (@Formatting.PreciseMinutes(trip.ElapsedSeconds) &times; @Formatting.Money(trip.Rates.PricePerMinute, currency))</th><td class="text-end">@Formatting.Money(breakdown.TimeCost, currency)</td></tr>
                     @if (breakdown.MinimumFareSurcharge > 0)
                     {
                         <tr><th scope="row" class="fw-normal">Aanvulling tot minimumtarief</th><td class="text-end">@Formatting.Money(breakdown.MinimumFareSurcharge, currency)</td></tr>

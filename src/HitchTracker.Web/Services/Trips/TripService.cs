@@ -132,16 +132,19 @@ public class TripService(
             throw new TripValidationException($"Taxi {taxi.LicensePlate} is op dit moment niet beschikbaar.");
         }
 
+        // De taxi staat op de weg: het beginpunt van de route (de routeplanner "snapt" de ophaallocatie naar de
+        // dichtstbijzijnde weg). Zo telt de meter geen meters tussen gebouw en straat mee.
+        var start = trip.PlannedRoute.Count > 0 ? trip.PlannedRoute[0] : trip.Pickup;
         var now = UtcNow;
         taxi.IsAvailable = false;
         trip.Taxi = taxi;
         trip.Status = TripStatus.InProgress;
         trip.StartedAt = now;
-        trip.CurrentLat = trip.PickupLat;
-        trip.CurrentLng = trip.PickupLng;
+        trip.CurrentLat = start.Lat;
+        trip.CurrentLng = start.Lng;
         trip.LastPositionAt = now;
         trip.CurrentPrice = trip.Rates.Calculate(0, 0).Total;
-        trip.Positions.Add(new TripPosition { Lat = trip.PickupLat, Lng = trip.PickupLng, RecordedAt = now });
+        trip.Positions.Add(new TripPosition { Lat = start.Lat, Lng = start.Lng, RecordedAt = now });
         trip.Version++;
 
         await db.SaveChangesAsync(cancellationToken);
