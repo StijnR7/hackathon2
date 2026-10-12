@@ -31,11 +31,11 @@
                     <tbody>
                     <tr><th scope="row" class="fw-normal">Instaptarief</th><td class="text-end">@Formatting.Money(breakdown.BaseFare, trip.CurrencyCode)</td></tr>
                     <tr>
-                        <th scope="row" class="fw-normal">Afstand (@Formatting.Kilometers(trip.PlannedDistanceMeters) &times; @Formatting.Money(trip.Rates.PricePerKm, trip.CurrencyCode))</th>
+                        <th scope="row" class="fw-normal">Afstand (@Formatting.PreciseKilometers(trip.PlannedDistanceMeters) &times; @Formatting.Money(trip.Rates.PricePerKm, trip.CurrencyCode))</th>
                         <td class="text-end">@Formatting.Money(breakdown.DistanceCost, trip.CurrencyCode)</td>
                     </tr>
                     <tr>
-                        <th scope="row" class="fw-normal">Tijd (@Formatting.Minutes(trip.PlannedDurationSeconds) &times; @Formatting.Money(trip.Rates.PricePerMinute, trip.CurrencyCode))</th>
+                        <th scope="row" class="fw-normal">Tijd (@Formatting.PreciseMinutes(trip.PlannedDurationSeconds) &times; @Formatting.Money(trip.Rates.PricePerMinute, trip.CurrencyCode))</th>
                         <td class="text-end">@Formatting.Money(breakdown.TimeCost, trip.CurrencyCode)</td>
                     </tr>
                     @if (breakdown.MinimumFareSurcharge > 0)
