@@ -1,0 +1,44 @@
+@model LiveTripViewModel
+@{
+    ViewData["Title"] = "Chauffeursscherm";
+    var trip = Model.Trip;
+}
+
+<div class="alert alert-secondary small">
+    <strong>Demo:</strong> dit is het scherm dat de chauffeur in de taxi ziet. Berichten van de reiziger verschijnen hier direct.
+</div>
+
+<partial name="_TripHeader" model="trip" />
+
+<div class="row g-4 mt-1" id="live-trip" data-role="driver"
+     data-status-url="@Url.Action("GetStatus", "TripsApi", new { id = trip.Id })">
+    <div class="col-lg-7 order-lg-2">
+        <div id="trip-map" class="map map-large" role="img" aria-label="Kaart met de route die de reiziger verwacht"></div>
+    </div>
+    <div class="col-lg-5 order-lg-1">
+        <div class="alert alert-danger d-none" id="off-route-banner" role="alert">
+            <strong>U wijkt af van de route die de reiziger verwacht.</strong> De reiziger ziet deze afwijking ook.
+        </div>
+        <section class="card shadow-sm mb-3" aria-labelledby="driver-messages">
+            <div class="card-body">
+                <h2 id="driver-messages" class="h6 text-uppercase text-muted">Berichten van de reiziger</h2>
+                <ul class="list-unstyled mb-0 alerts-list" data-field="alerts" data-only-passenger="true" aria-live="assertive">
+                    <li class="text-muted small">Nog geen berichten.</li>
+                </ul>
+            </div>
+        </section>
+        <section class="card shadow-sm">
+            <div class="card-body">
+                <div class="small text-muted">Meterstand</div>
+                <div class="display-6 fw-bold" data-field="currentPrice">@Formatting.Money(trip.CurrentPrice, trip.CurrencyCode)</div>
+                <div class="small text-muted">Status: <span data-field="status">@trip.Status.DisplayName()</span></div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script type="application/json" id="trip-data">@Json.Serialize(Model.MapData)</script>
+
+@section Scripts {
+    <script src="~/js/trip.js" asp-append-version="true"></script>
+}

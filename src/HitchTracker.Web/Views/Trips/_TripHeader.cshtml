@@ -1,0 +1,12 @@
+@model Trip
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1 small text-muted">
+    <span>@Model.City.Name</span>
+    <span aria-hidden="true">&middot;</span>
+    <span>@Model.TariffName</span>
+</div>
+<h1 class="h3 route-title">
+    <span><span class="route-dot route-dot-pickup" aria-hidden="true"></span> @Model.PickupName</span>
+    <span class="text-muted mx-1" aria-label="naar">&rarr;</span>
+    <span><span class="route-dot route-dot-destination" aria-hidden="true"></span> @Model.DestinationName</span>
+</h1>

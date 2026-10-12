@@ -1,0 +1,111 @@
+@model LiveTripViewModel
+@{
+    ViewData["Title"] = "Rit volgen";
+    var trip = Model.Trip;
+}
+
+<partial name="_TripHeader" model="trip" />
+
+<div class="row g-4 mt-1" id="live-trip"
+     data-status-url="@Url.Action("GetStatus", "TripsApi", new { id = trip.Id })"
+     data-summary-url="@Url.Action("Summary", "Trips", new { id = trip.Id })">
+
+    <div class="col-lg-7 order-lg-2">
+        <div id="trip-map" class="map map-large" role="img" aria-label="Kaart met de gereden en nog te rijden route"></div>
+        <div class="map-legend small mt-2">
+            <span><span class="legend-line legend-driven"></span> Gereden route</span>
+            <span><span class="legend-line legend-remaining"></span> Nog te rijden</span>
+            <span><span class="legend-line legend-planned"></span> Oorspronkelijk gepland</span>
+        </div>
+    </div>
+
+    <div class="col-lg-5 order-lg-1">
+        <div class="alert alert-danger d-none" id="off-route-banner" role="alert">
+            <strong>De taxi wijkt af van de geplande route.</strong> Spreek de chauffeur aan of beëindig de rit.
+        </div>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="meter-title" aria-live="polite">
+            <div class="card-body">
+                <h2 id="meter-title" class="visually-hidden">Ritprijs</h2>
+                <div class="row text-center g-2">
+                    <div class="col-6">
+                        <div class="small text-muted">Huidige prijs</div>
+                        <div class="display-6 fw-bold" data-field="currentPrice">@Formatting.Money(trip.CurrentPrice, trip.CurrencyCode)</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted">Verwachte eindprijs</div>
+                        <div class="display-6 fw-bold" data-field="estimatedFinalPrice">@Formatting.Money(trip.EstimatedFinalPrice, trip.CurrencyCode)</div>
+                    </div>
+                </div>
+                <p class="small text-muted text-center mb-3">
+                    Schatting vooraf: @Formatting.Money(trip.EstimatedPrice, trip.CurrencyCode)
+                    (max. @Formatting.Money(trip.EstimatedPriceHigh, trip.CurrencyCode))
+                </p>
+
+                <div class="progress mb-2" role="progressbar" aria-label="Voortgang van de rit" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-warning" data-field="progress" style="width: 0%"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted">
+                    <span>Gereden: <strong data-field="driven">@Formatting.Kilometers(trip.DrivenDistanceMeters)</strong></span>
+                    <span>Nog: <strong data-field="remaining">@Formatting.Kilometers(trip.RemainingDistanceMeters)</strong></span>
+                    <span>Ritduur: <strong data-field="elapsed">@Formatting.Minutes(trip.ElapsedSeconds)</strong></span>
+                </div>
+            </div>
+        </section>
+
+        @if (trip.Taxi is not null)
+        {
+            <section class="card shadow-sm mb-3">
+                <div class="card-body py-2">
+                    <partial name="_TaxiCard" model="trip.Taxi" />
+                </div>
+            </section>
+        }
+
+        <section class="card shadow-sm mb-3" aria-labelledby="alerts-title">
+            <div class="card-body">
+                <h2 id="alerts-title" class="h6 text-uppercase text-muted">Meldingen</h2>
+                <ul class="list-unstyled mb-0 alerts-list" data-field="alerts" aria-live="polite">
+                    <li class="text-muted small">Nog geen meldingen. We houden de route en de prijs voor je in de gaten.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card shadow-sm mb-3" aria-labelledby="message-title">
+            <div class="card-body">
+                <h2 id="message-title" class="h6 text-uppercase text-muted">Chauffeur aanspreken</h2>
+                <form method="post" asp-action="Message" asp-route-id="@trip.Id">
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        @foreach (var quickMessage in Model.QuickMessages)
+                        {
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" name="Form.Message" value="@quickMessage">@quickMessage</button>
+                        }
+                    </div>
+                </form>
+                <form method="post" asp-action="Message" asp-route-id="@trip.Id">
+                    <label asp-for="Form.Message" class="visually-hidden">Eigen bericht</label>
+                    <div class="input-group">
+                        <input asp-for="Form.Message" class="form-control" maxlength="200" placeholder="Eigen bericht aan de chauffeur" autocomplete="off" />
+                        <button type="submit" class="btn btn-outline-primary">Stuur</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <form method="post" asp-action="End" asp-route-id="@trip.Id"
+              data-confirm="Weet je zeker dat je de rit nu wilt beëindigen? Je betaalt de huidige meterstand.">
+            <button type="submit" class="btn btn-danger w-100">Rit nu beëindigen</button>
+        </form>
+
+        <p class="small text-muted mt-3">
+            Deel deze pagina met iemand die je vertrouwt: met de link kan diegene je rit live meevolgen.
+            <a asp-action="Driver" asp-route-id="@trip.Id" target="_blank" rel="noopener">Chauffeursscherm (demo)</a>
+        </p>
+    </div>
+</div>
+
+<script type="application/json" id="trip-data">@Json.Serialize(Model.MapData)</script>
+
+@section Scripts {
+    <script src="~/js/trip.js" asp-append-version="true"></script>
+}
