@@ -25,6 +25,14 @@ public static class Formatting
     public static string Kilometers(double meters) =>
         $"{(meters / 1000).ToString("0.0", Dutch)} km";
 
+    /// <summary>Nauwkeurig genoeg om een prijsopbouw na te rekenen (bijv. "5,52 km").</summary>
+    public static string PreciseKilometers(double meters) =>
+        $"{(meters / 1000).ToString("0.00", Dutch)} km";
+
+    /// <summary>Nauwkeurig genoeg om een prijsopbouw na te rekenen (bijv. "12,5 min").</summary>
+    public static string PreciseMinutes(double seconds) =>
+        $"{(seconds / 60).ToString("0.0", Dutch)} min";
+
     public static string Minutes(double seconds)
     {
         var minutes = (int)Math.Round(seconds / 60, MidpointRounding.AwayFromZero);
