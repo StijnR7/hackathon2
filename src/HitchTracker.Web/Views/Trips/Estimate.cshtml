@@ -1,0 +1,99 @@
+@model TripEstimateViewModel
+@{
+    ViewData["Title"] = "Prijsschatting";
+    var trip = Model.Trip;
+    var breakdown = Model.Breakdown;
+}
+
+<partial name="_TripHeader" model="trip" />
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-5">
+        <section class="card shadow-sm mb-4" aria-labelledby="estimate-title">
+            <div class="card-body">
+                <h2 id="estimate-title" class="h6 text-uppercase text-muted mb-3">Schatting voor de reis</h2>
+                <div class="d-flex justify-content-between align-items-end mb-3">
+                    <div>
+                        <div class="small text-muted">Verwachte prijs</div>
+                        <div class="display-6 fw-bold" data-testid="estimated-price">@Formatting.Money(trip.EstimatedPrice, trip.CurrencyCode)</div>
+                        <div class="small text-muted">
+                            bij druk verkeer maximaal <strong>@Formatting.Money(trip.EstimatedPriceHigh, trip.CurrencyCode)</strong>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fs-5 fw-semibold">@Formatting.Minutes(trip.PlannedDurationSeconds)</div>
+                        <div class="text-muted">@Formatting.Kilometers(trip.PlannedDistanceMeters)</div>
+                    </div>
+                </div>
+
+                <table class="table table-sm small mb-2">
+                    <caption class="caption-top">Opbouw volgens tarief: @trip.TariffName (@trip.City.Name)</caption>
+                    <tbody>
+                    <tr><th scope="row" class="fw-normal">Instaptarief</th><td class="text-end">@Formatting.Money(breakdown.BaseFare, trip.CurrencyCode)</td></tr>
+                    <tr>
+                        <th scope="row" class="fw-normal">Afstand (@Formatting.Kilometers(trip.PlannedDistanceMeters) &times; @Formatting.Money(trip.Rates.PricePerKm, trip.CurrencyCode))</th>
+                        <td class="text-end">@Formatting.Money(breakdown.DistanceCost, trip.CurrencyCode)</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="fw-normal">Tijd (@Formatting.Minutes(trip.PlannedDurationSeconds) &times; @Formatting.Money(trip.Rates.PricePerMinute, trip.CurrencyCode))</th>
+                        <td class="text-end">@Formatting.Money(breakdown.TimeCost, trip.CurrencyCode)</td>
+                    </tr>
+                    @if (breakdown.MinimumFareSurcharge > 0)
+                    {
+                        <tr><th scope="row" class="fw-normal">Aanvulling tot minimumtarief</th><td class="text-end">@Formatting.Money(breakdown.MinimumFareSurcharge, trip.CurrencyCode)</td></tr>
+                    }
+                    </tbody>
+                </table>
+                <p class="small text-muted mb-0">Route berekend met: @trip.RouteSource.</p>
+            </div>
+        </section>
+
+        <section class="card shadow-sm" aria-labelledby="start-title">
+            <div class="card-body">
+                <h2 id="start-title" class="h6 text-uppercase text-muted mb-3">Instappen</h2>
+                <form method="post" asp-action="Start" asp-route-id="@trip.Id">
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                    @if (Model.AvailableTaxis.Count == 0)
+                    {
+                        <p class="text-muted">Er zijn op dit moment geen taxi's beschikbaar in @trip.City.Name. Probeer het zo opnieuw.</p>
+                    }
+                    else
+                    {
+                        <p class="small">Controleer het <strong>kenteken</strong> van de taxi en kies hem hieronder:</p>
+                        <div class="list-group mb-3">
+                            @foreach (var taxi in Model.AvailableTaxis)
+                            {
+                                <label class="list-group-item d-flex gap-3 align-items-center">
+                                    <input class="form-check-input flex-shrink-0" type="radio" asp-for="Form.TaxiId" id="taxi-@taxi.Id" value="@taxi.Id" />
+                                    <partial name="_TaxiCard" model="taxi" />
+                                </label>
+                            }
+                        </div>
+
+                        <div class="form-check mb-3 demo-option">
+                            <input class="form-check-input" type="checkbox" asp-for="Form.SimulateDetour" />
+                            <label class="form-check-label small" asp-for="Form.SimulateDetour">
+                                <strong>Demo:</strong> laat de (gesimuleerde) chauffeur omrijden
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 fw-semibold">Ik zit in de taxi &ndash; start de rit</button>
+                    }
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <div id="trip-map" class="map map-large" role="img" aria-label="Kaart met de geplande route"></div>
+        <div class="map-legend small mt-2">
+            <span><span class="legend-line legend-remaining"></span> Geplande route</span>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="trip-data">@Json.Serialize(Model.MapData)</script>
+
+@section Scripts {
+    <script src="~/js/trip.js" asp-append-version="true"></script>
+}

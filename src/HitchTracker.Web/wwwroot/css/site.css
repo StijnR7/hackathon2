@@ -1,0 +1,168 @@
+:root {
+    --ht-yellow: #ffc107;
+    --ht-pickup: #198754;
+    --ht-destination: #dc3545;
+    --ht-route: #0d6efd;
+    --ht-planned: #6c757d;
+}
+
+html {
+    font-size: 15px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.brand-mark {
+    display: inline-block;
+    background: var(--ht-yellow);
+    color: #212529;
+    border-radius: .35rem;
+    padding: 0 .35rem;
+    font-weight: 800;
+    letter-spacing: -.05em;
+}
+
+/* Een lege validatiesamenvatting niet als rood blok tonen. */
+.validation-summary-valid {
+    display: none;
+}
+
+.map {
+    width: 100%;
+    border-radius: .5rem;
+    border: 1px solid #dee2e6;
+    z-index: 0;
+}
+
+.map-large {
+    height: 520px;
+}
+
+@media (max-width: 991.98px) {
+    .map-large {
+        height: 360px;
+    }
+}
+
+.route-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem;
+}
+
+.route-dot {
+    display: inline-block;
+    width: .8rem;
+    height: .8rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .3);
+    vertical-align: middle;
+}
+
+.route-dot-pickup { background: var(--ht-pickup); }
+.route-dot-destination { background: var(--ht-destination); }
+
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #6c757d;
+}
+
+.legend-line {
+    display: inline-block;
+    width: 2rem;
+    height: 0;
+    vertical-align: middle;
+    border-top: 4px solid var(--ht-route);
+}
+
+.legend-remaining { border-top-style: dashed; }
+.legend-planned { border-top-color: var(--ht-planned); opacity: .5; }
+
+/* Kenteken zoals op een Britse/EU-kentekenplaat. */
+.plate {
+    font-family: "Arial Narrow", Arial, sans-serif;
+    font-weight: 700;
+    background: var(--ht-yellow);
+    border: 2px solid #212529;
+    border-radius: .3rem;
+    padding: .15rem .5rem;
+    white-space: nowrap;
+    letter-spacing: .05em;
+}
+
+.demo-option {
+    border-left: 3px solid var(--ht-yellow);
+    padding-left: 2rem;
+}
+
+.alerts-list li + li {
+    margin-top: .5rem;
+}
+
+.alert-item {
+    border-left: 4px solid #0dcaf0;
+    padding-left: .5rem;
+}
+
+.alert-item-danger { border-left-color: var(--bs-danger); }
+.alert-item-success { border-left-color: var(--bs-success); }
+.alert-item-warning { border-left-color: var(--bs-warning); }
+
+/* Taximarker op de kaart. */
+.taxi-marker {
+    background: var(--ht-yellow);
+    border: 2px solid #212529;
+    border-radius: .4rem;
+    font-size: .7rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.3rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+
+.pin-marker {
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .3);
+}
+
+.pin-pickup { background: var(--ht-pickup); }
+.pin-destination { background: var(--ht-destination); }
+
+/* Sterrenbeoordeling met radioknoppen (van rechts naar links, zodat :hover ~ werkt). */
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    font-size: 1.8rem;
+}
+
+.star-rating input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.star-rating label {
+    color: #ced4da;
+    cursor: pointer;
+    padding: 0 .1rem;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: var(--ht-yellow);
+}
+
+.star-rating input:focus-visible + label {
+    outline: 2px solid var(--ht-route);
+    border-radius: .25rem;
+}

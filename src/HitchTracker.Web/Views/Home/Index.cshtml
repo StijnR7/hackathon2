@@ -1,0 +1,86 @@
+@model PlanTripViewModel
+@{
+    ViewData["Title"] = "Rit plannen";
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <h1 class="h2">Waar wil je heen?</h1>
+        <p class="text-muted">
+            Kies je bestemming en zie vóór het instappen hoe lang de rit duurt en wat een eerlijke prijs is.
+        </p>
+
+        <form method="get" asp-controller="Home" asp-action="Index" class="mb-3" id="city-form">
+            <label for="cityId" class="form-label fw-semibold">Stad</label>
+            <div class="input-group">
+                <select id="cityId" name="cityId" class="form-select" asp-items="Model.Cities" data-auto-submit></select>
+                <button class="btn btn-outline-secondary" type="submit">Wissel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-controller="Trips" asp-action="Plan" id="plan-form" novalidate>
+            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            <input type="hidden" asp-for="Form.CityId" />
+
+            <fieldset class="mb-3">
+                <legend class="form-label fw-semibold fs-6 mb-1">
+                    <span class="route-dot route-dot-pickup" aria-hidden="true"></span> <label asp-for="Form.PickupPlaceId">Ophaallocatie</label>
+                </legend>
+                <select asp-for="Form.PickupPlaceId" asp-items="Model.PlaceOptions(Model.Form.PickupPlaceId)"
+                        class="form-select" data-location="pickup">
+                    <option value="">Punt op de kaart (klik op de kaart)</option>
+                </select>
+                <input type="hidden" asp-for="Form.PickupLat" data-location-lat="pickup" />
+                <input type="hidden" asp-for="Form.PickupLng" data-location-lng="pickup" />
+            </fieldset>
+
+            <fieldset class="mb-3">
+                <legend class="form-label fw-semibold fs-6 mb-1">
+                    <span class="route-dot route-dot-destination" aria-hidden="true"></span> <label asp-for="Form.DestinationPlaceId">Bestemming</label>
+                </legend>
+                <select asp-for="Form.DestinationPlaceId" asp-items="Model.PlaceOptions(Model.Form.DestinationPlaceId)"
+                        class="form-select" data-location="destination">
+                    <option value="">Punt op de kaart (klik op de kaart)</option>
+                </select>
+                <input type="hidden" asp-for="Form.DestinationLat" data-location-lat="destination" />
+                <input type="hidden" asp-for="Form.DestinationLng" data-location-lng="destination" />
+            </fieldset>
+
+            <div class="mb-3" role="radiogroup" aria-label="Wat zet een klik op de kaart?">
+                <span class="form-label d-block small text-muted">Een klik op de kaart zet de:</span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="map-target" id="target-pickup" value="pickup" checked>
+                    <label class="btn btn-outline-success" for="target-pickup">Ophaallocatie</label>
+                    <input type="radio" class="btn-check" name="map-target" id="target-destination" value="destination">
+                    <label class="btn btn-outline-danger" for="target-destination">Bestemming</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-warning btn-lg w-100 fw-semibold">Bereken reistijd en prijs</button>
+        </form>
+
+        <div class="card mt-4 bg-light border-0">
+            <div class="card-body small">
+                <h2 class="h6">Zo werkt HitchTracker</h2>
+                <ol class="mb-0 ps-3">
+                    <li><strong>Voor de reis:</strong> schatting van reistijd en prijs volgens het officiële tarief.</li>
+                    <li><strong>Tijdens de reis:</strong> volg de gereden en nog te rijden route, de meter en de verwachte eindprijs.</li>
+                    <li><strong>Na de reis:</strong> controleer de eindprijs en meld het als je te veel betaalt.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div id="plan-map" class="map map-large" role="application" aria-label="Kaart van @Model.City.Name. Klik om een locatie te kiezen."></div>
+        <p class="small text-muted mt-2">
+            Tip: klik op een bekende plek (gele stip) om die te kiezen, of klik ergens anders op de kaart voor een eigen adres.
+        </p>
+    </div>
+</div>
+
+<script type="application/json" id="plan-data">@Json.Serialize(Model.MapData)</script>
+
+@section Scripts {
+    <script src="~/js/plan.js" asp-append-version="true"></script>
+}

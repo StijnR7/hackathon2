@@ -1,0 +1,150 @@
+@model TripSummaryViewModel
+@{
+    ViewData["Title"] = "Eindprijs";
+    var trip = Model.Trip;
+    var breakdown = Model.Breakdown;
+    var currency = trip.CurrencyCode;
+}
+
+<partial name="_TripHeader" model="trip" />
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-5">
+        @if (Model.IsFair)
+        {
+            <div class="alert alert-success" role="status" data-testid="verdict">
+                <strong>Eerlijke prijs.</strong> De eindprijs valt binnen de schatting van vóór de rit.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert" data-testid="verdict">
+                <strong>Hoger dan geschat.</strong> Je betaalt
+                @Formatting.Money(Model.DifferenceFromEstimate, currency) meer dan de schatting.
+                Controleer de route hieronder en meld het als je denkt dat je te veel betaalt.
+            </div>
+        }
+
+        @if (trip.Status == TripStatus.EndedEarly)
+        {
+            <div class="alert alert-warning">Je hebt deze rit voortijdig beëindigd.</div>
+        }
+
+        <section class="card shadow-sm mb-4" aria-labelledby="final-title">
+            <div class="card-body">
+                <h2 id="final-title" class="h6 text-uppercase text-muted">Te betalen</h2>
+                <div class="display-5 fw-bold mb-2" data-testid="final-price">@Formatting.Money(Model.FinalPrice, currency)</div>
+
+                <table class="table table-sm small">
+                    <caption class="caption-top">Opbouw volgens de meter &middot; tarief: @trip.TariffName</caption>
+                    <tbody>
+                    <tr><th scope="row" class="fw-normal">Instaptarief</th><td class="text-end">@Formatting.Money(breakdown.BaseFare, currency)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Afstand (@Formatting.Kilometers(trip.DrivenDistanceMeters))</th><td class="text-end">@Formatting.Money(breakdown.DistanceCost, currency)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Tijd (@Formatting.Minutes(trip.ElapsedSeconds))</th><td class="text-end">@Formatting.Money(breakdown.TimeCost, currency)</td></tr>
+                    @if (breakdown.MinimumFareSurcharge > 0)
+                    {
+                        <tr><th scope="row" class="fw-normal">Aanvulling tot minimumtarief</th><td class="text-end">@Formatting.Money(breakdown.MinimumFareSurcharge, currency)</td></tr>
+                    }
+                    </tbody>
+                </table>
+
+                <table class="table table-sm small mb-0">
+                    <thead><tr><th scope="col"></th><th scope="col" class="text-end">Gepland</th><th scope="col" class="text-end">Werkelijk</th></tr></thead>
+                    <tbody>
+                    <tr><th scope="row" class="fw-normal">Prijs</th><td class="text-end">@Formatting.Money(trip.EstimatedPrice, currency)</td><td class="text-end">@Formatting.Money(Model.FinalPrice, currency)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Afstand</th><td class="text-end">@Formatting.Kilometers(trip.PlannedDistanceMeters)</td><td class="text-end">@Formatting.Kilometers(trip.DrivenDistanceMeters)</td></tr>
+                    <tr><th scope="row" class="fw-normal">Duur</th><td class="text-end">@Formatting.Minutes(trip.PlannedDurationSeconds)</td><td class="text-end">@Formatting.Minutes(trip.ElapsedSeconds)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        @if (trip.Taxi is not null)
+        {
+            <section class="card shadow-sm mb-4">
+                <div class="card-body py-2">
+                    <partial name="_TaxiCard" model="trip.Taxi" />
+                </div>
+            </section>
+        }
+
+        <section class="card shadow-sm mb-4" aria-labelledby="feedback-title">
+            <div class="card-body">
+                <h2 id="feedback-title" class="h6 text-uppercase text-muted">Beoordeel je rit</h2>
+                @if (trip.Feedback is { } feedback)
+                {
+                    <p class="mb-1">Je gaf deze rit <strong>@feedback.Stars van de 5 sterren</strong>.</p>
+                    @if (feedback.ReportedOvercharge)
+                    {
+                        <p class="small text-danger mb-0">Je hebt gemeld dat je te veel betaald hebt. Ons klachtenteam bekijkt de rit.</p>
+                    }
+                }
+                else
+                {
+                    <form method="post" asp-action="Feedback" asp-route-id="@trip.Id">
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                        <fieldset class="mb-2">
+                            <legend class="form-label fs-6">Aantal sterren</legend>
+                            <div class="star-rating">
+                                @for (var stars = 5; stars >= 1; stars--)
+                                {
+                                    <input type="radio" asp-for="Form.Stars" id="stars-@stars" value="@stars" />
+                                    <label for="stars-@stars" title="@(stars == 1 ? "1 ster" : $"{stars} sterren")">&#9733;<span class="visually-hidden">@(stars == 1 ? "1 ster" : $"{stars} sterren")</span></label>
+                                }
+                            </div>
+                        </fieldset>
+                        <div class="mb-2">
+                            <label asp-for="Form.Comment" class="form-label small">Toelichting (optioneel)</label>
+                            <textarea asp-for="Form.Comment" class="form-control" rows="2" maxlength="500"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" asp-for="Form.ReportOvercharge" />
+                            <label class="form-check-label small" asp-for="Form.ReportOvercharge">Ik heb te veel betaald en wil dit melden</label>
+                        </div>
+                        <button type="submit" class="btn btn-warning">Verstuur beoordeling</button>
+                    </form>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <div id="trip-map" class="map map-large" role="img" aria-label="Kaart met de geplande en de gereden route"></div>
+        <div class="map-legend small mt-2">
+            <span><span class="legend-line legend-driven"></span> Gereden route</span>
+            <span><span class="legend-line legend-planned"></span> Geplande route</span>
+        </div>
+
+        @if (trip.Alerts.Count > 0)
+        {
+            <section class="card shadow-sm mt-4" aria-labelledby="timeline-title">
+                <div class="card-body">
+                    <h2 id="timeline-title" class="h6 text-uppercase text-muted">Meldingen tijdens de rit</h2>
+                    <ul class="list-unstyled mb-0 alerts-list">
+                        @foreach (var alert in trip.Alerts.OrderBy(a => a.CreatedAt).ThenBy(a => a.Id))
+                        {
+                            <li class="alert-item alert-item-@alert.Severity">
+                                <span class="text-muted small">@Formatting.Time(trip.City.ToLocalTime(alert.CreatedAt))</span>
+                                @if (alert.FromPassenger)
+                                {
+                                    <span class="badge text-bg-secondary">Jouw bericht</span>
+                                }
+                                @alert.Message
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </section>
+        }
+
+        <p class="mt-3">
+            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index" asp-route-cityId="@trip.CityId">Nieuwe rit plannen</a>
+        </p>
+    </div>
+</div>
+
+<script type="application/json" id="trip-data">@Json.Serialize(Model.MapData)</script>
+
+@section Scripts {
+    <script src="~/js/trip.js" asp-append-version="true"></script>
+}
